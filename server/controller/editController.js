@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 const employees = require("../model/agroEmployeeModel");
-const jwt_secret = "JSONtoken";
+const jwt_secret = process.env.jwt_secret_token;
 
 const editingEmployeeProfile = async (req, res) => {
   let details = req.body;
