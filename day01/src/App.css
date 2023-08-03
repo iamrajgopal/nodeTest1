@@ -23,3 +23,12 @@ form{
   display: flex;
   justify-content: center;
 }
+
+.navItem{
+  margin-bottom: 1rem;
+}
+
+.navItem:hover{
+  cursor: pointer;
+  background-color: aquamarine;
+}

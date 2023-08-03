@@ -2,9 +2,12 @@ import React,{useState} from 'react';
 import {Navbar,Button, Container} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import Useregistratin from '../registration/Useregistratin';
+import Editprofile from './features/Editprofile';
+
 
 function Home() {
-  let [compState,setCompState] = useState()
+  let [compState,setCompState] = useState();
+
 
 const  renderComponents = ()=>{
   switch (compState){

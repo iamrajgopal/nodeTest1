@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from 'react-bootstrap';
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { login } from '../../redux/slices/authSlice'
 
 function Login() {
   const emailRef = useRef();
   const passwordRef = useRef();
 
   let navigate = useNavigate();
+  let dispatch = useDispatch();
 
   let onSubmittingUser = async (e) => {
     e.preventDefault();
@@ -18,7 +21,7 @@ function Login() {
 
     let reqOptions = {
       method: 'POST',
-      headers: {'Content-Type': 'application/json',},
+      headers: { 'Content-Type': 'application/json', },
       body: JSON.stringify(formData)
     }
 
@@ -27,11 +30,12 @@ function Login() {
       let response = await userLogin.json();
       if (response.status === 'sucess') {
         alert(response.message);
-        localStorage.setItem('token',response.token)
+        localStorage.setItem('token', response.token);
+        dispatch(login())
         navigate('/dashBoard')
-      } else if(response.status === 'wrong') {
+      } else if (response.status === 'wrong') {
         alert(response.message);
-      }else if(response.status === 'failed'){
+      } else if (response.status === 'failed') {
         alert(response.message);
       }
     } catch (error) {
@@ -39,31 +43,30 @@ function Login() {
     }
   };
 
-let sendTokenToServer = async ()=>{
-  let token = localStorage.getItem('token');
-  let reqOptions = {
-    method: 'POST',
-        headers: {'Content-Type': 'application/json',},
-        body: JSON.stringify({token})
-  }
-    if(token){
-      let JsonData = await fetch('http://localhost:5000/token/tokenValidation',reqOptions);
-      let response = await JsonData.json();
-    if(response.status==='success'){
-      navigate('/dashBoard')
-    }else if(response.status==='unSuccessful'){
-      navigate('/');
-      alert('Login By Using Valid Credentials')
+  let sendTokenToServer = async () => {
+    let token = localStorage.getItem('token');
+    let reqOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', },
+      body: JSON.stringify({ token })
     }
-    console.log(response)
-  }else{
-    console.log('no token')
+    if (token) {
+      let JsonData = await fetch('http://localhost:5000/token/tokenValidation', reqOptions);
+      let response = await JsonData.json();
+      if (response.status === 'success') {
+        navigate('/dashBoard')
+      } else if (response.status === 'unSuccessful') {
+        navigate('/');
+        alert('Login By Using Valid Credentials')
+      }
+    } else {
+      console.log('no token')
+    }
   }
-}
 
-  useEffect(()=>{
+  useEffect(() => {
     sendTokenToServer();
-  },[])
+  }, [])
 
   return (
     <form onSubmit={onSubmittingUser}>

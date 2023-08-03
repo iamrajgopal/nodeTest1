@@ -13,7 +13,8 @@ const route = require('./routes/agroEmployeeRoute');
 //route for posting employees details
 app.use('/employee',route);
 app.use('/validEmployee',route)
-app.use('/token',route)
+app.use('/token',route);
+app.use('/Profile',route)
 
 app.listen(Port, () => {
     console.log(`Listening To Port :${Port}`)
