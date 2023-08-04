@@ -3,7 +3,7 @@ const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const employees = require("../model/agroEmployeeModel");
 const jwt_secret = process.env.jwt_secret_token;
-
+const jwt_refresh_secret = process.env.jwt_refresh_secret_token
 
 let postingEmployeeDetails = async (req, res) => {
     let theuserCredentials = req.body;
@@ -36,7 +36,6 @@ let postingEmployeeDetails = async (req, res) => {
 
 //jwt secretkeys
 
-
 let ValidationEmployee = async (req,res)=>{
    let loginDetails = req.body;
    let Email = loginDetails.email;
@@ -45,20 +44,29 @@ let ValidationEmployee = async (req,res)=>{
     let userExist = await employees.findOne({email:Email});
 
     //sending token to front-end if password is correct
-    const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,
-    // {expiresIn: 60}
-    );
+    const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '2m'});
+
+    ////////////////////////added refresh token
+    const refreshToken = await jwt.sign({ email: userExist ? userExist.email : '' }, jwt_refresh_secret, { expiresIn: '7d' });
 
     if(userExist){
         //bcrypt is compared with the userGiven to  the database password
         const isPasswordMatched = await bcrypt.compare(Pass, userExist.password);
 
         if(isPasswordMatched===true){
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: true, // Use 'secure' attribute for HTTPS connections
+                maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie expiration time (7 days)
+              });
+
             res.status(200).send({
                 status: "sucess",
                 message: "Logged In Sucessfully",
                 data: userExist,
-                token:token
+                token:token,
+                ref_token:refreshToken
               }) 
         }else{
             res.status(200).json({status:'wrong',message:'Entered a wrong Password'})

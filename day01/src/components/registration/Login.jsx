@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { login } from '../../redux/slices/authSlice'
+import React, { useEffect, useRef } from "react";
+import { Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/slices/authSlice";
 
 function Login() {
   const emailRef = useRef();
@@ -20,70 +20,78 @@ function Login() {
     };
 
     let reqOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', },
-      body: JSON.stringify(formData)
-    }
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    };
 
-    const userLogin = await fetch('http://localhost:5000/validEmployee/validEmployees', reqOptions);
+    const userLogin = await fetch(
+      "http://localhost:5000/validEmployee/validEmployees",
+      reqOptions
+    );
     try {
       let response = await userLogin.json();
-      if (response.status === 'sucess') {
+      if (response.status === "sucess") {
         alert(response.message);
-        localStorage.setItem('token', response.token);
-        dispatch(login())
-        navigate('/dashBoard')
-      } else if (response.status === 'wrong') {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("refreshToken", response.ref_token);
+        dispatch(login());
+        navigate("/dashBoard");
+      } else if (response.status === "wrong") {
         alert(response.message);
-      } else if (response.status === 'failed') {
+      } else if (response.status === "failed") {
         alert(response.message);
       }
     } catch (error) {
-      console.log('Error occurred:', error);
+      console.log("Error occurred:", error);
     }
   };
 
   let sendTokenToServer = async () => {
-    let token = localStorage.getItem('token');
-    let reqOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', },
-      body: JSON.stringify({ token })
-    }
+    let token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+
     if (token) {
-      let JsonData = await fetch('http://localhost:5000/token/tokenValidation', reqOptions);
+      let reqOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, refreshToken }),
+      };
+      let JsonData = await fetch(
+        "http://localhost:5000/token/tokenValidation",
+        reqOptions
+      );
       let response = await JsonData.json();
-      if (response.status === 'success') {
-        navigate('/dashBoard')
-      } else if (response.status === 'unSuccessful') {
-        navigate('/');
-        alert('Login By Using Valid Credentials')
+      if (response.status === "success") {
+        navigate("/dashBoard");
+      } else if (response.status === "unSuccessful") {
+        navigate("/");
+        alert("Login By Using Valid Credentials");
       }
     } else {
-      console.log('no token')
+      console.log("no token");
     }
-  }
+  };
 
   useEffect(() => {
     sendTokenToServer();
-  }, [])
+  }, []);
 
   return (
     <form onSubmit={onSubmittingUser}>
       <div>
-        <label htmlFor='mail'>Email :</label>
-        <input ref={emailRef} id='mail' type='email' />
+        <label htmlFor="mail">Email :</label>
+        <input ref={emailRef} id="mail" type="email" />
       </div>
       <div>
-        <label htmlFor='pass'>Password :</label>
-        <input ref={passwordRef} id='pass' type='password' />
+        <label htmlFor="pass">Password :</label>
+        <input ref={passwordRef} id="pass" type="password" />
       </div>
-      <div style={{ paddingTop: '1rem', textAlign: 'right' }}>
-        <Button type='submit'>Login</Button>
+      <div style={{ paddingTop: "1rem", textAlign: "right" }}>
+        <Button type="submit">Login</Button>
       </div>
     </form>
   );
 }
 
 export default Login;
-
