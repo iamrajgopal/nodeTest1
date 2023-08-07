@@ -44,9 +44,9 @@ let ValidationEmployee = async (req,res)=>{
     let userExist = await employees.findOne({email:Email});
 
     //sending token to front-end if password is correct
-    const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '2m'});
+    const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '3m'});
 
-    ////////////////////////added refresh token
+    //added refresh token
     const refreshToken = await jwt.sign({ email: userExist ? userExist.email : '' }, jwt_refresh_secret, { expiresIn: '7d' });
 
     if(userExist){
@@ -57,8 +57,8 @@ let ValidationEmployee = async (req,res)=>{
 
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: true, // Use 'secure' attribute for HTTPS connections
-                maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie expiration time (7 days)
+                secure: true, 
+                maxAge: 60,
               });
 
             res.status(200).send({
@@ -82,18 +82,19 @@ let ValidationEmployee = async (req,res)=>{
 }
 
 let validatingToken = async (req,res)=>{
- const tokenFromClient = req.body.token;
- //getting already existing token from the user and decrypting it and searching if user ,then if user exists sending success user can login auto: 
- const decodedToken = jwt.verify(tokenFromClient,jwt_secret);
+ const tokenFromClient = req.body.refreshToken;
+ const decodedToken = jwt.verify(tokenFromClient,jwt_refresh_secret);
 
     let userExist = await employees.findOne({email:decodedToken.email}) ;
      if (userExist){
-        res.json({status:'success',data:userExist})
+        const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '3m'});
+        res.json({status:'success',data:userExist,token:token})
      }else{
         res.json({status:'unSuccessful'})
      }
 
 }
+
 
 
 module.exports = {postingEmployeeDetails,ValidationEmployee,validatingToken}

@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { login } from "../../redux/slices/authSlice";
+import Cookies from 'js-cookie';
+
 
 function Login() {
   const emailRef = useRef();
   const passwordRef = useRef();
 
   let navigate = useNavigate();
-  let dispatch = useDispatch();
+
 
   let onSubmittingUser = async (e) => {
     e.preventDefault();
@@ -34,8 +34,7 @@ function Login() {
       if (response.status === "sucess") {
         alert(response.message);
         localStorage.setItem("token", response.token);
-        localStorage.setItem("refreshToken", response.ref_token);
-        dispatch(login());
+        Cookies.set("refreshToken", response.ref_token);
         navigate("/dashBoard");
       } else if (response.status === "wrong") {
         alert(response.message);
@@ -49,33 +48,45 @@ function Login() {
 
   let sendTokenToServer = async () => {
     let token = localStorage.getItem("token");
-    const refreshToken = localStorage.getItem("refreshToken");
-
-    if (token) {
-      let reqOptions = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, refreshToken }),
-      };
-      let JsonData = await fetch(
-        "http://localhost:5000/token/tokenValidation",
-        reqOptions
-      );
-      let response = await JsonData.json();
-      if (response.status === "success") {
-        navigate("/dashBoard");
-      } else if (response.status === "unSuccessful") {
-        navigate("/");
-        alert("Login By Using Valid Credentials");
-      }
-    } else {
-      console.log("no token");
+    let refreshToken = Cookies.get('refreshToken');
+    console.log(refreshToken,'refresh token')
+try {
+  if (!token && refreshToken) {
+    let reqOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    };
+    let JsonData = await fetch(
+      "http://localhost:5000/token/tokenValidation",
+      reqOptions
+    );
+    let response = await JsonData.json();
+    if (response.status === "success") {
+      
+      localStorage.setItem("token", response.token);
+      navigate("/dashBoard");
+    } else if (response.status === "unSuccessful") {
+      navigate("/");
+      alert("Login By Using Valid Credentials");
     }
+  } 
+  else if (!token && !refreshToken) {
+    navigate("/");
+  }else if(token && refreshToken){
+    navigate('/dashboard')
+  }
+  
+} catch (error) {
+  console.log('Error Occured : ',error)
+}    
   };
+
+
 
   useEffect(() => {
     sendTokenToServer();
-  }, []);
+  });
 
   return (
     <form onSubmit={onSubmittingUser}>

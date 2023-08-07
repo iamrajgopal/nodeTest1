@@ -14,7 +14,7 @@ export const authSlice = createSlice({
        },
        logout : (state,action)=>{
         state.isAuthenticated = false;
-        console.log('lodded out')
+        console.log('logged out')
        }
     }
 });
