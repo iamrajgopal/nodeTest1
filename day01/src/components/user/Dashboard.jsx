@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Container, Navbar, Dropdown,Nav } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Editprofile from "./features/Editprofile";
@@ -14,10 +14,13 @@ function Dashboard() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
 
-  const handleProfilePicChange = (file) => {
-    setProfilePic(URL.createObjectURL(file));
-    
+  const handleProfilePicChange = (dataURL) => {
+    setProfilePic(dataURL);
   };
+
+  const handleToggleUserMenu2 = ()=>{
+    
+  }
 
   const handleToggleUserMenu = () => {
     setShowUserMenu(!showUserMenu);
@@ -69,6 +72,13 @@ function Dashboard() {
     localStorage.removeItem("token");
     navigate("/");
   };
+  
+  useEffect(() => {
+    const storedProfilePic = localStorage.getItem("profilePic");
+    if (storedProfilePic) {
+      setProfilePic(storedProfilePic);
+    }
+  }, []);
 
   return (
     <>
@@ -106,10 +116,12 @@ function Dashboard() {
                 borderRadius: "50%",
                 cursor: "pointer",
               }}
+              onClick={handleToggleUserMenu2}
             />
           ) : (
             <Profilepic onProfilePicChange={handleProfilePicChange} />
           )}
+        
         </Nav>
         </Container>
       </Navbar>

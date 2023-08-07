@@ -12,8 +12,20 @@ function Profilepic({ onProfilePicChange }) {
   const handlingSubmit = (event) => {
     event.preventDefault();
     if (selectedFile) {
-      onProfilePicChange(selectedFile);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Save the selected file data as a data URL
+        localStorage.setItem("profilePic", e.target.result);
+        onProfilePicChange(e.target.result);
+      };
+      reader.readAsDataURL(selectedFile);
     }
+  };
+
+  const handleRemoveProfile = () => {
+    localStorage.removeItem("profilePic");
+    setSelectedFile(null);
+    onProfilePicChange(null);
   };
 
   return (
@@ -27,16 +39,14 @@ function Profilepic({ onProfilePicChange }) {
             accept="image/*"
             onChange={handleFileChange}
           />
+          <Button type="submit">Submit</Button>
+          <Button type="button" onClick={handleRemoveProfile}>
+            Remove Profile
+          </Button>
         </form>
-      </div>
-      <div>
-        <Button type="submit" onClick={handlingSubmit}>
-          Submit
-        </Button>
       </div>
     </>
   );
 }
 
 export default Profilepic;
-
