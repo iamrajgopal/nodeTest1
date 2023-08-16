@@ -3,18 +3,21 @@ import Modal from 'react-bootstrap/Modal';
 import { logout } from '../../../redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import Cookies from 'js-cookie';
 
 function Deleteuser() {
     let navigate = useNavigate();
     let dispatch = useDispatch();
 
     let deletingAccount = async ()=>{
-        let token = localStorage.getItem("token");
+        let token = Cookies.get("token");
+        console.log(token,"this token is from cookies")
 
         let reqOptions = {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                 "Authorization":`bearer ${token}` 
             },
             body: JSON.stringify({ token }),
         };

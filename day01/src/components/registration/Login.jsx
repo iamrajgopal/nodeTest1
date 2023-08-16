@@ -31,10 +31,12 @@ function Login() {
     );
     try {
       let response = await userLogin.json();
-      if (response.status === "sucess") {
+      if (response.status === "success") {
         alert(response.message);
-        localStorage.setItem("token", response.token);
-        Cookies.set("refreshToken", response.ref_token);
+        // localStorage.setItem("token", response.token);
+        Cookies.set("token", response.token);
+        // Cookies.set("refreshToken", response.ref_token);
+
         navigate("/dashBoard");
       } else if (response.status === "wrong") {
         alert(response.message);
@@ -86,7 +88,7 @@ try {
 
   useEffect(() => {
     sendTokenToServer();
-  });
+  },[]);
 
   return (
     <form onSubmit={onSubmittingUser}>

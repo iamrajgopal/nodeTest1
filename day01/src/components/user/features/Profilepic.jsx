@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
 
-function Profilepic({ onProfilePicChange }) {
+function Profilepic() {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (event) => {
@@ -12,20 +12,14 @@ function Profilepic({ onProfilePicChange }) {
   const handlingSubmit = (event) => {
     event.preventDefault();
     if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // Save the selected file data as a data URL
-        localStorage.setItem("profilePic", e.target.result);
-        onProfilePicChange(e.target.result);
-      };
-      reader.readAsDataURL(selectedFile);
+      const imagePath = URL.createObjectURL(selectedFile);
+      localStorage.setItem("profilePicUrl", imagePath); 
     }
   };
 
   const handleRemoveProfile = () => {
-    localStorage.removeItem("profilePic");
+    localStorage.removeItem("profilePicUrl");
     setSelectedFile(null);
-    onProfilePicChange(null);
   };
 
   return (

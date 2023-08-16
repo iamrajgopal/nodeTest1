@@ -12,10 +12,15 @@ form{
   display: inline-block;
   padding :3rem;
   border-radius: 10px;
+  width: auto;
 }
 
 .cautionpara{
-  color:red
+  color: red;
+  display: flex;
+  width: 11.8rem;
+  height: auto ;
+  margin-top:0.5rem ;
 }
 
 

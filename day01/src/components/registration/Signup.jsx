@@ -54,7 +54,7 @@ const Signup1 = () => {
                     }}
                     render={({ field }) => <input {...field} id="name" type="text" />}
                 />
-                {errors.name && <p className='cautionpara'>{errors.name.message}</p>}
+                {errors.name && <p className='cautionpara'>*{errors.name.message}</p>}
             </div>
 
             {/* Email */}
@@ -73,7 +73,7 @@ const Signup1 = () => {
                     }}
                     render={({ field }) => <input {...field} id="email" type="email" />}
                 />
-                {errors.email && <p className='cautionpara'>{errors.email.message}</p>}
+                {errors.email && <p className='cautionpara'>*{errors.email.message}</p>}
             </div>
 
             {/* Mobile Number */}
@@ -92,7 +92,7 @@ const Signup1 = () => {
                     }}
                     render={({ field }) => <input {...field} id="mobile" type="text" />}
                 />
-                {errors.mobile && <p className='cautionpara'>{errors.mobile.message}</p>}
+                {errors.mobile && <p className='cautionpara'>*{errors.mobile.message}</p>}
             </div>
 
             {/* Password */}
@@ -104,6 +104,10 @@ const Signup1 = () => {
                     defaultValue=""
                     rules={{
                         required: 'Password is required',
+                        // pattern:{
+                        //     value: /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/,
+                        //     message:'password should conatin One Caps,Number and a special character'
+                        // },
                         minLength: {
                             value: 6,
                             message: 'Password should be at least 6 characters long',
@@ -111,7 +115,8 @@ const Signup1 = () => {
                     }}
                     render={({ field }) => <input {...field} id="password" type="password" />}
                 />
-                {errors.password && <p className='cautionpara'>{errors.password.message}</p>}
+                {errors.password && <p className='cautionpara'>*{errors.password.message}</p>}
+                
             </div>
 
             {/* Confirm Password */}
@@ -130,7 +135,7 @@ const Signup1 = () => {
                         <input {...field} id="confirmPassword" type="password" />
                     )}
                 />
-                {errors.confirmPassword && <p className='cautionpara'>{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && <p className='cautionpara'>*{errors.confirmPassword.message}</p>}
             </div>
             <div style={{ paddingTop: '1rem', textAlign: 'right' }}>
                 <Button type="submit" >Submit</Button>

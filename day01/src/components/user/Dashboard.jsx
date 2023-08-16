@@ -1,26 +1,21 @@
-import React, { useState,useEffect } from "react";
+import React, { useState } from "react";
 import { Container, Navbar, Dropdown,Nav } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Editprofile from "./features/Editprofile";
 import Deleteuser from "./features/Deleteuser";
 import { AiOutlineMenu } from "react-icons/ai"
 import Profilepic from './features/Profilepic'
+import Cookies from "js-cookie";
 
-const settings = ["Edit profile", "Dashboard", "Logout",'Delete User'];
+const settings = ["Edit profile", "Dashboard", "Logout",'Delete User',"Profile Pic"];
 
 function Dashboard() {
+  const profilePicUrl = localStorage.getItem("profilePicUrl");
+
   const [compState, setCompState] = useState("");
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [profilePic, setProfilePic] = useState(null);
-
-  const handleProfilePicChange = (dataURL) => {
-    setProfilePic(dataURL);
-  };
-
-  const handleToggleUserMenu2 = ()=>{
-    
-  }
+  // const [profile,setProfile] = useState('')
 
   const handleToggleUserMenu = () => {
     setShowUserMenu(!showUserMenu);
@@ -39,6 +34,9 @@ function Dashboard() {
         break;
         case "Delete User":
           setCompState("Delete")
+        break;
+        case "Profile Pic":
+          setCompState("Profile");
         break;
       default:
         setCompState("");
@@ -62,6 +60,8 @@ function Dashboard() {
         return <div>Dashboard Content</div>;
         case "Delete": 
         return <Deleteuser></Deleteuser>
+        case 'Profile':
+          return <Profilepic></Profilepic>
       default:
         return null;
     }
@@ -70,15 +70,21 @@ function Dashboard() {
   const performLogout = () => {
     alert("User Logged Out Successfully");
     localStorage.removeItem("token");
+    Cookies.remove('refreshToken')
     navigate("/");
   };
+//   let picture = localStorage.getItem('profilePic');
+
+// let updatingProfilePic = async ()=>{
+//   let picture = await localStorage.getItem('profilePic');
+//   setProfile(picture)
+// };
+
+// useEffect(()=>{
+//   updatingProfilePic()
+// },[profile])
+
   
-  useEffect(() => {
-    const storedProfilePic = localStorage.getItem("profilePic");
-    if (storedProfilePic) {
-      setProfilePic(storedProfilePic);
-    }
-  }, []);
 
   return (
     <>
@@ -99,34 +105,28 @@ function Dashboard() {
                 padding: "0",
               }}
             >
-         
          <AiOutlineMenu style={{color: 'red'}} size={'20px'}></AiOutlineMenu>
             </Dropdown.Toggle>
             {/* Render the dropdown menu */}
             <Dropdown.Menu>{renderSettings}</Dropdown.Menu>
           </Dropdown>
           <Nav>
-          {profilePic ? (
-            <img
-              src={profilePic}
-              alt="User Avatar"
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                cursor: "pointer",
-              }}
-              onClick={handleToggleUserMenu2}
-            />
-          ) : (
-            <Profilepic onProfilePicChange={handleProfilePicChange} />
-          )}
-        
+          {profilePicUrl && (
+        <img
+          src={profilePicUrl}
+          alt="User Avatar"
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+          }}
+        />
+      )}
         </Nav>
         </Container>
       </Navbar>
       <Container>{renderComponents()}</Container>
-      {console.log(profilePic,'fromprofile')}
+     {console.log(profilePicUrl,'proooo')}
     </>
   );
 }

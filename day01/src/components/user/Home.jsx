@@ -2,6 +2,7 @@ import React, { useState,useEffect } from "react";
 import { Navbar, Button, Container } from "react-bootstrap";
 import Useregistratin from "../registration/Useregistratin";
 import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
 
 
 function Home() {
@@ -18,7 +19,7 @@ function Home() {
   };
 
   let directingToDash = ()=>{
-  let token = localStorage.getItem("token");
+  let token = Cookies.get('refreshToken');
   if(token){
     navigate('/dashboard')
   }else{

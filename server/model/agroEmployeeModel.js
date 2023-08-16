@@ -10,7 +10,11 @@ const agroEmployeesSchema =  mongoose.Schema({
     age: Number,
     mobile: Number,
     email: String,
-    password: String
+    password: String,
+    tokens :[{
+        type:Object
+    }],
+    refreshToken:String
 });
 
 const employees = new mongoose.model(collection, agroEmployeesSchema);

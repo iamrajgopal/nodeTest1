@@ -1,100 +1,307 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const saltRounds = 10;
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const employees = require("../model/agroEmployeeModel");
 const jwt_secret = process.env.jwt_secret_token;
-const jwt_refresh_secret = process.env.jwt_refresh_secret_token
+const jwt_refresh_secret = process.env.jwt_refresh_secret_token;
+
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
 
 let postingEmployeeDetails = async (req, res) => {
-    let theuserCredentials = req.body;
-    try {
-        const existingEmployee = await employees.findOne({ email: theuserCredentials.email });
+  let theuserCredentials = req.body;
+  try {
+    const existingEmployee = await employees.findOne({
+      email: theuserCredentials.email,
+    });
 
-        if (existingEmployee) {
-          res.status(200).send({
-            status: "failed",
-            message: "User with this email already exists",
-            data: existingEmployee,
-          })
-        } else {
-            //used bcrypt for password proection hashing
-            let hashedPassword = await bcrypt.hash(theuserCredentials.password,saltRounds)
-            const savedEmployee = await employees.insertMany({email: theuserCredentials.email,password:hashedPassword,name:theuserCredentials.name,mobile:theuserCredentials.mobile});
-            res.status(200).send({
-                    status: "success",
-                    message: "user registered sucessfully",
-                    data: savedEmployee,
-                });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "unable save user into database" });
+    if (existingEmployee) {
+      res.status(200).send({
+        status: "failed",
+        message: "User with this email already exists",
+        data: existingEmployee,
+      });
+    } else {
+      //used bcrypt for password proection hashing
+      let hashedPassword = await bcrypt.hash(
+        theuserCredentials.password,
+        saltRounds
+      );
+      const savedEmployee = await employees.insertMany({
+        email: theuserCredentials.email,
+        password: hashedPassword,
+        name: theuserCredentials.name,
+        mobile: theuserCredentials.mobile,
+      });
+      res.status(200).send({
+        status: "success",
+        message: "user registered sucessfully",
+        data: savedEmployee,
+      });
     }
+  } catch (error) {
+    res.status(500).json({ message: "unable save user into database" });
+  }
 };
-
 
 //validating And givingauthentication to user
 
 //jwt secretkeys
 
-let ValidationEmployee = async (req,res)=>{
-   let loginDetails = req.body;
-   let Email = loginDetails.email;
-   let Pass = loginDetails.password
-   try {
-    let userExist = await employees.findOne({email:Email});
+let ValidationEmployee = async (req, res) => {
+  let loginDetails = req.body;
+  let Email = loginDetails.email;
+  let Pass = loginDetails.password;
+  try {
+    let userExist = await employees.findOne({ email: Email });
+    console.log(userExist, '11111111111');
 
-    //sending token to front-end if password is correct
-    const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '3m'});
+    if (userExist) {
+      // bcrypt is compared with the userGiven to the database password
+      const isPasswordMatched = await bcrypt.compare(Pass, userExist.password);
 
-    //added refresh token
-    const refreshToken = await jwt.sign({ email: userExist ? userExist.email : '' }, jwt_refresh_secret, { expiresIn: '7d' });
+      if (isPasswordMatched === true) {
 
-    if(userExist){
-        //bcrypt is compared with the userGiven to  the database password
-        const isPasswordMatched = await bcrypt.compare(Pass, userExist.password);
+        //if tokens in userDb already Exist
+        let existTokens = userExist.tokens || [];
+        // console.log(existTokens, 'from exist tokens')
 
-        if(isPasswordMatched===true){
+        // let oldTokens = userExist.tokens || [];
+        // console.log(oldTokens, 'from old', Date());
 
-            res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                secure: true, 
-                maxAge: 60,
-              });
+        const token = await jwt.sign({ email: userExist.email }, jwt_secret, { expiresIn: '15m' });
 
-            res.status(200).send({
-                status: "sucess",
-                message: "Logged In Sucessfully",
-                data: userExist,
-                token:token,
-                ref_token:refreshToken
-              }) 
-        }else{
-            res.status(200).json({status:'wrong',message:'Entered a wrong Password'})
+        // added refresh token
+        const refreshToken = await jwt.sign({ email: userExist.email }, jwt_refresh_secret, { expiresIn: '1h' });
+        console.log('n1')
+
+        if (userExist.tokens[0].accessToken.length > 1) {
+          console.log('n2')
+          let existingTokenFromDb = userExist.tokens[0].accessToken;
+          const decodedToken = jwt.verify(existingTokenFromDb, jwt_refresh_secret, (error, decoded) => {
+            console.log(decoded, 'from decoded n3');
+
+            if (decoded) {
+              let expairyTime = decoded.exp * 1000
+              console.log('n4')
+              let timeRemaimg = ((expairyTime - Date.now()) / 1000) / 60;
+              console.log(timeRemaimg);
+              if (timeRemaimg > 0) {
+                console.log(timeRemaimg);
+                console.log('n5')
+              }
+
+            } else if (decoded === undefined) {
+
+              //now check if there is refresh token and if the refresh is valid then generate a new access and login user
+
+              let refreshTokenFromDb = userExist.refreshToken;
+              console.log(refreshTokenFromDb);
+              const decodedRefresh = jwt.verify(refreshTokenFromDb, jwt_refresh_secret, (err, decoded) => {
+                if (decoded) {
+                  console.log('refresh exists');
+                  userExist.tokens = [{ accessToken: token, signedAt: Date.now().toString() }];
+                  userExist.save();
+                } else if (decoded === undefined) {
+                  //new access and refresh to be generated by asking the user to to login again
+
+                }
+              })
+
+
+
+              userExist.tokens = [{ accessToken: token, signedAt: Date.now().toString() }];
+              userExist.save();
+
+              console.log('token got expired now its updated')
+              console.log('may be token got expired')
+            } else {
+              console.log(error)
+              console.log('unable to decode because of token got expired')
+            }
+
+          });
+
+          console.log('token Exists', decodedToken)
+        } else {
+          console.log('no tokens')
         }
-       
-    }else if(!userExist){
-        res.status(200).json({status:'failed',message:'No user with this email id'})
+
+        // // Update the user document with new tokens
+        // const updatedUser = await employees.findOneAndUpdate( { email: userExist.email },{ tokens: oldTokens, refreshToken },{ new: true } // Return the updated document
+        // );
+
+
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+        });
+
+        res.status(200).send({
+          status: 'success',
+          message: 'Logged In Successfully',
+          token:token
+          // data: userExist
+        });
+      } else {
+        res.status(200).json({ status: 'wrong', message: 'Entered a wrong Password' });
+      }
+    } else {
+      res.status(401).json({ status: 'failed', message: 'No user with this email id' });
     }
-    
-   } catch (error) {
-        res.status(500).json({status:'error',message:'error occured'})
-   }
-}
-
-let validatingToken = async (req,res)=>{
- const tokenFromClient = req.body.refreshToken;
- const decodedToken = jwt.verify(tokenFromClient,jwt_refresh_secret);
-
-    let userExist = await employees.findOne({email:decodedToken.email}) ;
-     if (userExist){
-        const token = await jwt.sign({email:userExist?userExist.email:''},jwt_secret,{expiresIn: '3m'});
-        res.json({status:'success',data:userExist,token:token})
-     }else{
-        res.json({status:'unSuccessful'})
-     }
-
-}
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Error occurred' });
+  }
+};
 
 
 
-module.exports = {postingEmployeeDetails,ValidationEmployee,validatingToken}
+
+// const ValidationEmployee = async (req, res) => {
+//   let loginDetails = req.body;
+//   let Email = loginDetails.email;
+//   let Pass = loginDetails.password;
+
+//   try {
+//     let userExist = await employees.findOne({ email: Email });
+
+//     if (userExist) {
+//       const isPasswordMatched = await bcrypt.compare(Pass, userExist.password);
+
+//       if (isPasswordMatched) {
+//         const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+//         if (userExist.tokens && userExist.tokens.length > 0) {
+//           const decodedToken = jwt.decode(userExist.tokens[0].token);
+//           const timeRemaining = decodedToken.exp - currentTime;
+
+//           if (timeRemaining > 0) {
+//             res.status(200).send({
+//               status: 'success',
+//               message: 'Logged In Successfully',
+//               data: userExist,
+//             });
+//             return;
+//           }
+//         }
+
+//         // Generate new tokens
+//         const accessToken = jwt.sign({ email: userExist.email }, jwt_secret, { expiresIn: '50m' });
+//         const refreshToken = jwt.sign({ email: userExist.email }, jwt_refresh_secret, { expiresIn: '60m' });
+
+//         // Update user's tokens and refreshToken in the database
+//         userExist.tokens = [{ token: accessToken, signedAt: Date.now().toString() }];
+//         userExist.refreshToken = refreshToken;
+//         await userExist.save();
+
+//         res.status(200).send({
+//           status: 'success',
+//           message: 'Logged In Successfully',
+//           data: userExist,
+//           accessToken,
+//           refreshToken,
+//         });
+//       } else {
+//         res.status(200).json({ status: 'wrong', message: 'Entered a wrong Password' });
+//       }
+//     } else {
+//       res.status(200).json({ status: 'failed', message: 'No user with this email id' });
+//     }
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({ status: 'error', message: 'An error occurred' });
+//   }
+// };
+
+
+// if (userExist) {
+//     //bcrypt is compared with the userGiven to  the database password
+//     const isPasswordMatched = await bcrypt.compare(Pass, userExist.password);
+
+//     if (isPasswordMatched === true) {
+//         let oldTokens = userExist.tokens || [];
+
+//         if (oldTokens.length === 1) {
+//             try {
+//                 const decodedToken = jwt.verify(oldTokens[0].token, jwt_refresh_secret);
+//                 let timeRemaimg = ((decodedToken.exp * 1000 - Date.now()) / 1000) / 60;
+//                 if (timeRemaimg > 0) {
+//                     res.status(200).send({
+//                         status: "sucess",
+//                         message: "Logged In Sucessfully",
+//                         data: userExist,
+//                         token: token,
+//                         ref_token: refreshToken,
+//                     });
+//                 } else if (timeRemaimg === undefined || timeRemaimg < 0 ) {
+//                     oldTokens.push({ token, signedAt: Date.now().toString() });
+//                     userExist.tokens = oldTokens; // Update the tokens array in the userExist object
+//                     console.log('333333')
+//                 }
+
+//                 // const replacingTokens = await employees.findOneAndUpdate(
+//                 //   { email: userExist.email },
+//                 //   {$set: { tokens: [{ token, signedAt: Date.now().toString() }],refreshToken,}},{ new: true });
+//                 // console.log(replacingTokens);
+//                 console.log('222222')
+//             } catch (error) {
+//                 console.error("Error updating tokens:", error);
+//             }
+//         } else {
+//             oldTokens.push({ token, signedAt: Date.now().toString() });
+//             userExist.tokens = oldTokens; // Update the tokens array in the userExist object
+//             console.log('333333')
+//         }
+
+//         console.log(oldTokens, "from oldTokens");
+
+//         res.cookie("refreshToken", refreshToken, {
+//             httpOnly: true,
+//             secure: true,
+//             maxAge: 60,
+//         });
+
+
+//     } else {
+//         res
+//             .status(200)
+//             .json({ status: "wrong", message: "Entered a wrong Password" });
+//     }
+// } else if (!userExist) {
+//     res
+//         .status(200)
+//         .json({ status: "failed", message: "No user with this email id" });
+// }
+//     } catch (error) {
+//         res.status(500).json({ status: "error", message: "error occured" });
+//     }
+// };
+
+let validatingToken = async (req, res) => {
+  const tokenFromClient = req.body.refreshToken;
+  const decodedToken = jwt.verify(tokenFromClient, jwt_refresh_secret);
+
+  let userExist = await employees.findOne({ email: decodedToken.email });
+  if (userExist) {
+    const token = await jwt.sign(
+      { email: userExist ? userExist.email : "" },
+      jwt_secret,
+      { expiresIn: "3m" }
+    );
+    res.json({ status: "success", data: userExist, token: token });
+  } else {
+    res.json({ status: "unSuccessful" });
+  }
+};
+
+module.exports = {
+  postingEmployeeDetails,
+  ValidationEmployee,
+  validatingToken
+};
