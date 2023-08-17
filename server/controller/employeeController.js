@@ -60,7 +60,6 @@ let ValidationEmployee = async (req, res) => {
   let Pass = loginDetails.password;
   try {
     let userExist = await employees.findOne({ email: Email });
-    console.log(userExist, '11111111111');
 
     if (userExist) {
       // bcrypt is compared with the userGiven to the database password
@@ -68,21 +67,13 @@ let ValidationEmployee = async (req, res) => {
 
       if (isPasswordMatched === true) {
 
-        //if tokens in userDb already Exist
-        let existTokens = userExist.tokens || [];
-        // console.log(existTokens, 'from exist tokens')
+        //Generating Tokens
+        const token = await jwt.sign({ email: userExist.email }, jwt_secret, { expiresIn: '2m' });
+        const refreshToken = await jwt.sign({ email: userExist.email }, jwt_refresh_secret, { expiresIn: '1h' })
 
-        // let oldTokens = userExist.tokens || [];
-        // console.log(oldTokens, 'from old', Date());
-
-        const token = await jwt.sign({ email: userExist.email }, jwt_secret, { expiresIn: '15m' });
-
-        // added refresh token
-        const refreshToken = await jwt.sign({ email: userExist.email }, jwt_refresh_secret, { expiresIn: '1h' });
-        console.log('n1')
-
+        //if tokens Exist
         if (userExist.tokens[0].accessToken.length > 1) {
-          console.log('n2')
+          //save upto 3 tokens as an array 
           let existingTokenFromDb = userExist.tokens[0].accessToken;
           const decodedToken = jwt.verify(existingTokenFromDb, jwt_refresh_secret, (error, decoded) => {
             console.log(decoded, 'from decoded n3');
@@ -146,7 +137,7 @@ let ValidationEmployee = async (req, res) => {
         res.status(200).send({
           status: 'success',
           message: 'Logged In Successfully',
-          token:token
+          token: token
           // data: userExist
         });
       } else {

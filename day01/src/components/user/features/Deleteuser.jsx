@@ -34,6 +34,8 @@ function Deleteuser() {
             
         } else if (response.status === "error") {
             alert(response.message);
+        }else if(response.status === "wrong user"){
+          alert(response.message)
         }
     }
   return (

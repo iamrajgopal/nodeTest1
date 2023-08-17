@@ -69,8 +69,7 @@ function Dashboard() {
 
   const performLogout = () => {
     alert("User Logged Out Successfully");
-    localStorage.removeItem("token");
-    Cookies.remove('refreshToken')
+    Cookies.remove('token')
     navigate("/");
   };
 //   let picture = localStorage.getItem('profilePic');

@@ -18,13 +18,26 @@ function Home() {
     }
   };
 
-  let directingToDash = ()=>{
-  let token = Cookies.get('refreshToken');
-  if(token){
-    navigate('/dashboard')
-  }else{
-    navigate('/')
-  }
+  let directingToDash = async ()=>{
+    let token = Cookies.get("token");
+    console.log(token,"this token is from cookies")
+
+    let reqOptions = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+             "Authorization":`bearer ${token}` 
+        },
+        body: JSON.stringify({ token }),
+    };
+
+    let directToDashboard = await fetch("http://localhost:5000/dashdirecting/directingToDash",reqOptions);
+    let response = await directToDashboard.json();
+    if (response.status === "success") {
+        navigate('/dashBoard')  
+    } else if (response.status === "unSuccessful") {
+      navigate('/')
+    }
 }
 
 useEffect(() => {

@@ -10,6 +10,11 @@ function Login() {
 
   let navigate = useNavigate();
 
+  const onSubmitSuccess = () => {
+    navigate('/dashBoard', {replace: true})
+  }
+
+
 
   let onSubmittingUser = async (e) => {
     e.preventDefault();
@@ -37,7 +42,7 @@ function Login() {
         Cookies.set("token", response.token);
         // Cookies.set("refreshToken", response.ref_token);
 
-        navigate("/dashBoard");
+        onSubmitSuccess();
       } else if (response.status === "wrong") {
         alert(response.message);
       } else if (response.status === "failed") {
@@ -48,47 +53,47 @@ function Login() {
     }
   };
 
-  let sendTokenToServer = async () => {
-    let token = localStorage.getItem("token");
-    let refreshToken = Cookies.get('refreshToken');
-    console.log(refreshToken,'refresh token')
-try {
-  if (!token && refreshToken) {
-    let reqOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    };
-    let JsonData = await fetch(
-      "http://localhost:5000/token/tokenValidation",
-      reqOptions
-    );
-    let response = await JsonData.json();
-    if (response.status === "success") {
+//   let sendTokenToServer = async () => {
+//     let token = localStorage.getItem("token");
+//     let refreshToken = Cookies.get('refreshToken');
+//     console.log(refreshToken,'refresh token')
+// try {
+//   if (!token && refreshToken) {
+//     let reqOptions = {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ refreshToken }),
+//     };
+//     let JsonData = await fetch(
+//       "http://localhost:5000/token/tokenValidation",
+//       reqOptions
+//     );
+//     let response = await JsonData.json();
+//     if (response.status === "success") {
       
-      localStorage.setItem("token", response.token);
-      navigate("/dashBoard");
-    } else if (response.status === "unSuccessful") {
-      navigate("/");
-      alert("Login By Using Valid Credentials");
-    }
-  } 
-  else if (!token && !refreshToken) {
-    navigate("/");
-  }else if(token && refreshToken){
-    navigate('/dashboard')
-  }
+//       localStorage.setItem("token", response.token);
+//       navigate("/dashBoard");
+//     } else if (response.status === "unSuccessful") {
+//       navigate("/");
+//       alert("Login By Using Valid Credentials");
+//     }
+//   } 
+//   else if (!token && !refreshToken) {
+//     navigate("/");
+//   }else if(token && refreshToken){
+//     navigate('/dashboard')
+//   }
   
-} catch (error) {
-  console.log('Error Occured : ',error)
-}    
-  };
+// } catch (error) {
+//   console.log('Error Occured : ',error)
+// }    
+//   };
 
 
 
-  useEffect(() => {
-    sendTokenToServer();
-  },[]);
+//   useEffect(() => {
+//     sendTokenToServer();
+//   },[]);
 
   return (
     <form onSubmit={onSubmittingUser}>
